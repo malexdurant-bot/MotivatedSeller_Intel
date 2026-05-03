@@ -1,50 +1,47 @@
 #!/usr/bin/env python3
 """
 scraper_tax_forfeiture.py
-Downloads and parses the Hennepin County tax-forfeited land list from MinnBid.
+Downloads Hennepin County tax-forfeited land auction lists from MinnBid.
 
-Source: https://www.hennepincounty.gov/services/property/tax-forfeited-land
-        + MinnBid auction platform PDFs
+SOURCE: MinnBid (minnbid.org) — Minnesota's official tax-forfeited land auction platform
+  - Lists all Hennepin County properties up for tax forfeiture auction
+  - PDFs published per auction cycle (typically 2-3x per year)
+  - The scraper finds the current auction list, NOT the checklist or other docs
 
-Outputs: docs/data/tax_forfeiture.json
+The previous version grabbed "before-you-bid-checklist.pdf" — wrong file.
+This version specifically targets the property LIST (numbered parcel inventory).
 
-GREEN/YELLOW — the PDF URL is predictable but changes when a new list is published.
-The scraper first finds the current list URL from the Hennepin page, then downloads
-and parses it with pypdf.
+OUTPUT: docs/data/tax_forfeiture.json
 """
 import requests
 from bs4 import BeautifulSoup
 import json
 import re
-import time
 import io
 from pathlib import Path
 from datetime import datetime
 
-try:
-    import pypdf
-    PYPDF_OK = True
-except ImportError:
-    try:
-        import PyPDF2 as pypdf
-        PYPDF_OK = True
-    except ImportError:
-        PYPDF_OK = False
-
 OUTPUT = Path(__file__).parent.parent / 'docs' / 'data' / 'tax_forfeiture.json'
 
 HEADERS = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+                  '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
     'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 }
 
-HENNEPIN_TFL_URL = 'https://www.hennepincounty.gov/services/property/tax-forfeited-land'
-MINNBID_BASE = 'https://www.minnbid.org'
+MINNBID_HENNEPIN = 'https://www.minnbid.org/auctions/list/?county=Hennepin&type=land'
+HENNEPIN_TFL_PAGE = 'https://www.hennepincounty.gov/services/property/tax-forfeited-land'
 
 MAX_RETRIES = 3
 
+# Keywords that identify the PROPERTY LIST (not checklists, notices, maps etc.)
+LIST_KEYWORDS = ['list', 'parcel', 'property', 'auction', 'inventory', 'sale list']
+EXCLUDE_KEYWORDS = ['checklist', 'check-list', 'before you bid', 'map', 'instructions',
+                    'terms', 'notice of sale', 'how to']
 
-def fetch_with_retry(url: str) -> requests.Response | None:
+
+def fetch_with_retry(url):
+    import time
     for attempt in range(MAX_RETRIES):
         try:
             r = requests.get(url, headers=HEADERS, timeout=45)
@@ -52,118 +49,130 @@ def fetch_with_retry(url: str) -> requests.Response | None:
                 return r
             time.sleep(2 ** attempt)
         except Exception as e:
-            print(f"  Attempt {attempt+1} failed: {e}", flush=True)
+            print(f"  Error (attempt {attempt+1}): {e}", flush=True)
             time.sleep(2 ** attempt)
     return None
 
 
-def find_pdf_url() -> str | None:
-    """
-    Scrape the Hennepin County TFL page to find the current auction PDF link.
-    Also checks MinnBid directly.
-    """
-    print("  Searching for current Hennepin TFL PDF...", flush=True)
+def is_property_list(url, link_text):
+    """Return True if the PDF link looks like a property auction list, not a checklist."""
+    url_lower = url.lower()
+    text_lower = link_text.lower()
+    combined = url_lower + ' ' + text_lower
 
-    # Try Hennepin County page
-    r = fetch_with_retry(HENNEPIN_TFL_URL)
+    # Exclude obvious non-list documents
+    if any(k in combined for k in EXCLUDE_KEYWORDS):
+        return False
+
+    # Must contain at least one list-like keyword
+    return any(k in combined for k in LIST_KEYWORDS)
+
+
+def find_auction_pdf_urls():
+    """Search MinnBid and Hennepin County page for current property auction list PDFs."""
+    pdf_urls = []
+
+    # 1. Try MinnBid
+    print("  Checking MinnBid...", flush=True)
+    r = fetch_with_retry(MINNBID_HENNEPIN)
     if r:
         soup = BeautifulSoup(r.text, 'html.parser')
-        links = soup.find_all('a', href=True)
-        for link in links:
+        for link in soup.find_all('a', href=True):
             href = link['href']
-            text = link.get_text(strip=True).lower()
-            if (('.pdf' in href.lower() or 'pdf' in text) and
-                    ('forfeiture' in href.lower() or 'forfeiture' in text or
-                     'auction' in href.lower() or 'list' in text)):
+            text = link.get_text(strip=True)
+            if '.pdf' in href.lower() and is_property_list(href, text):
                 if not href.startswith('http'):
-                    href = 'https://www.hennepincounty.gov' + href
-                print(f"  Found PDF link: {href}", flush=True)
-                return href
+                    href = 'https://www.minnbid.org' + href
+                print(f"  MinnBid PDF found: {text[:60]} → {href[:80]}", flush=True)
+                pdf_urls.append(href)
 
-    # Try MinnBid directly
-    minnbid_url = 'https://www.minnbid.org/auctions/?county=Hennepin'
-    r2 = fetch_with_retry(minnbid_url)
+    # 2. Try Hennepin County TFL page
+    print("  Checking Hennepin County TFL page...", flush=True)
+    r2 = fetch_with_retry(HENNEPIN_TFL_PAGE)
     if r2:
         soup2 = BeautifulSoup(r2.text, 'html.parser')
         for link in soup2.find_all('a', href=True):
             href = link['href']
-            if '.pdf' in href.lower() and 'hennepin' in href.lower():
+            text = link.get_text(strip=True)
+            if '.pdf' in href.lower() and is_property_list(href, text):
                 if not href.startswith('http'):
-                    href = MINNBID_BASE + href
-                print(f"  Found MinnBid PDF: {href}", flush=True)
-                return href
+                    href = 'https://www.hennepincounty.gov' + href
+                print(f"  Hennepin PDF found: {text[:60]} → {href[:80]}", flush=True)
+                pdf_urls.append(href)
 
-    # Last resort — try the known MinnBid upload path pattern
-    # These URLs are predictable: minnbidapi-prod.ecommerce.auction/uploads/...
-    print("  Could not find PDF URL automatically.", flush=True)
-    return None
+    # 3. Try MinnBid main auction page with broader search
+    if not pdf_urls:
+        print("  Trying MinnBid main page...", flush=True)
+        r3 = fetch_with_retry('https://www.minnbid.org')
+        if r3:
+            soup3 = BeautifulSoup(r3.text, 'html.parser')
+            for link in soup3.find_all('a', href=True):
+                href = link['href']
+                text = link.get_text(strip=True)
+                if ('.pdf' in href.lower() and
+                        'hennepin' in (href + text).lower() and
+                        is_property_list(href, text)):
+                    if not href.startswith('http'):
+                        href = 'https://www.minnbid.org' + href
+                    pdf_urls.append(href)
+
+    return list(dict.fromkeys(pdf_urls))  # deduplicate preserving order
 
 
-def parse_pdf_for_properties(pdf_bytes: bytes) -> list:
-    """Extract property addresses and PIDs from the TFL PDF."""
-    records = []
-
-    if not PYPDF_OK:
-        print("  pypdf not installed. Run: pip install pypdf", flush=True)
-        return records
-
+def parse_pdf(pdf_bytes):
+    """Extract property addresses and PIDs from auction list PDF."""
     try:
+        import pypdf
         reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
-        full_text = ''
-        for page in reader.pages:
-            full_text += page.extract_text() + '\n'
+        text = '\n'.join(page.extract_text() or '' for page in reader.pages)
     except Exception as e:
-        print(f"  PDF parse error: {e}", flush=True)
-        return records
+        print(f"  pypdf error: {e}", flush=True)
+        return []
 
-    lines = full_text.split('\n')
+    records = []
+    lines = text.split('\n')
 
-    # Hennepin TFL lists follow a pattern:
-    # PID | Address | Legal Description | Appraised Value | Min Bid
-    # We'll extract address-like lines and appraised values
     for i, line in enumerate(lines):
         line = line.strip()
         if not line:
             continue
 
-        # Look for lines that look like property addresses
-        # MN addresses: number + street name
+        # Look for property addresses
         addr_match = re.search(
-            r'\b(\d{1,5})\s+([A-Z][A-Za-z\s]{2,30}(?:ST|AVE|RD|DR|LN|BLVD|WAY|CT|PL|TER|CIR)[\.,]?\s*(?:N|S|E|W|NE|NW|SE|SW)?)',
+            r'\b(\d{1,5})\s+([A-Z][A-Za-z\s]{2,25}(?:ST|AVE|RD|DR|LN|BLVD|WAY|CT|PL|TER|CIR|PKWY)[\.,]?\s*(?:N|S|E|W|NE|NW|SE|SW)?)\b',
             line, re.IGNORECASE
         )
+        if not addr_match:
+            continue
 
-        if addr_match:
-            address = addr_match.group(0).strip().upper()
+        address = addr_match.group(0).strip().upper()
 
-            # Look for appraised value in same or adjacent line
-            value = 0
-            val_text = line + (lines[i+1] if i+1 < len(lines) else '')
-            val_match = re.search(r'\$?([\d,]+(?:\.\d{2})?)', val_text)
-            if val_match:
-                try:
-                    value = int(val_match.group(1).replace(',', '').split('.')[0])
-                except ValueError:
-                    pass
+        # Look for appraised value
+        value = 0
+        val_match = re.search(r'\$\s*([\d,]+)', line + ' ' + (lines[i+1] if i+1 < len(lines) else ''))
+        if val_match:
+            try:
+                value = int(val_match.group(1).replace(',', ''))
+            except ValueError:
+                pass
 
-            # Extract PID if present (Hennepin PIDs are numeric, up to 13 digits)
-            pid = ''
-            pid_match = re.search(r'\b(\d{7,13})\b', line)
-            if pid_match:
-                pid = pid_match.group(1)
+        # Look for PID (Hennepin PIDs: numeric, 7-13 digits)
+        pid = ''
+        pid_match = re.search(r'\b(\d{7,13})\b', line)
+        if pid_match:
+            pid = pid_match.group(1)
 
-            if address:
-                records.append({
-                    'address': address,
-                    'pid': pid,
-                    'appraised_value': value,
-                    'source': 'Hennepin County Tax Forfeiture List',
-                    'signal': 'TAX FORFEITURE',
-                    'county': 'HENNEPIN',
-                    'scraped_at': datetime.now().strftime('%Y-%m-%d'),
-                })
+        records.append({
+            'address': address,
+            'pid': pid,
+            'appraised_value': value,
+            'signal': 'TAX FORFEITURE',
+            'county': 'HENNEPIN',
+            'source': 'Hennepin County / MinnBid Auction List',
+            'scraped_at': datetime.now().strftime('%Y-%m-%d'),
+        })
 
-    # Deduplicate
+    # Deduplicate by address
     seen = set()
     deduped = []
     for r in records:
@@ -177,39 +186,45 @@ def parse_pdf_for_properties(pdf_bytes: bytes) -> list:
 def main():
     print("\n=== SCRAPER: Hennepin Tax Forfeiture List ===", flush=True)
 
-    pdf_url = find_pdf_url()
+    pdf_urls = find_auction_pdf_urls()
 
-    if not pdf_url:
-        print("  No PDF found. Outputting empty dataset.", flush=True)
+    if not pdf_urls:
+        print("  No auction list PDFs found. Hennepin may not have an active auction.", flush=True)
+        print("  This is normal between auction cycles (Hennepin runs 2-3 auctions/year).", flush=True)
         records = []
+        pdf_url_used = ''
     else:
-        print(f"  Downloading PDF: {pdf_url}", flush=True)
-        r = fetch_with_retry(pdf_url)
+        # Use first (most relevant) PDF found
+        pdf_url_used = pdf_urls[0]
+        print(f"  Downloading: {pdf_url_used}", flush=True)
+        r = fetch_with_retry(pdf_url_used)
         if not r:
-            print("  Failed to download PDF.", flush=True)
+            print("  Download failed.", flush=True)
             records = []
         else:
-            print(f"  PDF downloaded ({len(r.content) / 1024:.0f} KB). Parsing...", flush=True)
-            records = parse_pdf_for_properties(r.content)
-
-    print(f"\n  Total forfeiture properties found: {len(records)}", flush=True)
+            print(f"  Downloaded {len(r.content)/1024:.0f} KB. Parsing...", flush=True)
+            records = parse_pdf(r.content)
+            print(f"  Parsed {len(records)} properties from PDF", flush=True)
 
     output = {
         'generated_at': datetime.now().isoformat(),
         'source': 'Hennepin County Tax Forfeited Land / MinnBid',
-        'pdf_url': pdf_url or '',
+        'pdf_url': pdf_url_used,
+        'all_pdfs_found': pdf_urls,
         'total_properties': len(records),
         'properties': records,
+        'note': 'Hennepin runs 2-3 auctions/year. Zero records between cycles is normal.',
     }
 
     OUTPUT.parent.mkdir(parents=True, exist_ok=True)
     with open(OUTPUT, 'w') as f:
         json.dump(output, f, separators=(',', ':'))
 
-    print(f"  Written: {OUTPUT}", flush=True)
+    size = OUTPUT.stat().st_size / 1024
+    print(f"  Written: {OUTPUT} ({size:.0f} KB)", flush=True)
     return len(records)
 
 
 if __name__ == '__main__':
     count = main()
-    print(f"\n  Tax forfeiture scraper complete: {count} properties", flush=True)
+    print(f"\n  Tax forfeiture scraper: {count} properties", flush=True)
