@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Motivated Seller Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09090b;
+  --surface: #111114;
+  --surface2: #18181c;
+  --border: rgba(255,255,255,0.07);
+  --border-bright: rgba(255,255,255,0.15);
+  --text: #f4f4f5;
+  --muted: #71717a;
+  --dim: #3f3f46;
+  --accent: #f97316;
+  --accent2: #fb923c;
+  --accent-dim: rgba(249,115,22,0.12);
+  --accent-glow: rgba(249,115,22,0.25);
+  --green: #22c55e;
+  --red: #ef4444;
+  --blue: #3b82f6;
+  --yellow: #eab308;
+  --purple: #a855f7;
+  --lp: #ef4444;
+  --nofc: #f97316;
+  --taxdeed: #eab308;
+  --jud: #a855f7;
+  --lnirs: #3b82f6;
+  --lnmech: #06b6d4;
+  --pro: #22c55e;
+  --ln: #71717a;
+  --divorce: #f43f5e;
+  --taxlien: #fbbf24;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1000;
+  opacity: 0.4;
+}
+
+/* ── HEADER ── */
+header {
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+  position: sticky;
+  top: 0;
+  background: rgba(9,9,11,0.92);
+  backdrop-filter: blur(12px);
+  z-index: 100;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-mark {
+  width: 32px; height: 32px;
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.logo-text {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+}
+
+.logo-sub {
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+#last-updated {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.8); }
+}
+
+/* ── MAIN LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: calc(100vh - 64px);
+}
+
+/* ── SIDEBAR ── */
+aside {
+  border-right: 1px solid var(--border);
+  padding: 1.5rem;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+aside::-webkit-scrollbar { width: 3px; }
+aside::-webkit-scrollbar-track { background: transparent; }
+aside::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+.sidebar-section h3 {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+/* Stats cards */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.stat-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  transition: border-color 0.2s;
+}
+
+.stat-card:hover { border-color: var(--border-bright); }
+
+.stat-num {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+.stat-card.full { grid-column: span 2; }
+
+/* Filters */
+.filter-group { display: flex; flex-direction: column; gap: 6px; }
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  border: 1px solid transparent;
+}
+
+.filter-item:hover { background: var(--surface2); }
+.filter-item.active {
+  background: var(--accent-dim);
+  border-color: rgba(249,115,22,0.3);
+}
+
+.filter-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.filter-name { flex: 1; color: var(--text); font-size: 12px; }
+.filter-count {
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface2);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* State filter */
+.state-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  transition: all 0.15s;
+}
+
+.chip:hover { border-color: var(--border-bright); color: var(--text); }
+.chip.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Score range */
+.score-range { display: flex; flex-direction: column; gap: 8px; }
+
+.range-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.range-label { font-size: 11px; color: var(--muted); }
+#score-val { font-size: 11px; color: var(--accent); font-weight: 500; }
+
+input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Search */
+.search-wrap { position: relative; }
+
+.search-wrap input {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 12px 9px 36px;
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.search-wrap input:focus { border-color: var(--accent); }
+.search-wrap input::placeholder { color: var(--muted); }
+
+.search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* Export btn */
+.export-btn {
+  width: 100%;
+  padding: 10px;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.export-btn:hover { background: var(--accent2); }
+.export-btn:active { transform: scale(0.98); }
+
+/* ── MAIN CONTENT ── */
+main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Market overview bar */
+.market-bar {
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 1.5rem;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+}
+
+.market-bar::-webkit-scrollbar { height: 2px; }
+.market-bar::-webkit-scrollbar-thumb { background: var(--dim); }
+
+.market-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+
+.market-pill:hover { border-color: var(--border-bright); background: var(--surface2); }
+.market-pill.active { border-color: var(--accent); background: var(--accent-dim); }
+
+.market-flag {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.market-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--text);
+}
+
+.market-count {
+  font-size: 10px;
+  color: var(--muted);
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+/* Table area */
+.table-wrap {
+  flex: 1;
+  overflow: auto;
+  padding: 0;
+}
+
+.table-wrap::-webkit-scrollbar { width: 4px; height: 4px; }
+.table-wrap::-webkit-scrollbar-thumb { background: var(--dim); border-radius: 2px; }
+
+/* Results header */
+.results-header {
+  padding: 12px 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+  z-index: 10;
+}
+
+.results-count {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.results-count span { color: var(--text); font-weight: 500; }
+
+.sort-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.sort-label { font-size: 11px; color: var(--muted); }
+
+.sort-btn {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.sort-btn:hover { border-color: var(--border-bright); color: var(--text); }
+.sort-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+/* Records table */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead th {
+  text-align: left;
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 10px 1.5rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  position: sticky;
+  top: 49px;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+
+thead th:hover { color: var(--text); }
+thead th.sort-asc::after { content: ' ↑'; color: var(--accent); }
+thead th.sort-desc::after { content: ' ↓'; color: var(--accent); }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.1s;
+  animation: rowIn 0.3s ease both;
+}
+
+@keyframes rowIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+tbody tr:hover { background: var(--surface2); }
+tbody tr.highlight { background: rgba(249,115,22,0.05); }
+
+td {
+  padding: 12px 1.5rem;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* Score badge */
+.score-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+.score-high { background: rgba(239,68,68,0.15); color: #ef4444; border: 1.5px solid rgba(239,68,68,0.4); }
+.score-med { background: rgba(249,115,22,0.15); color: #f97316; border: 1.5px solid rgba(249,115,22,0.4); }
+.score-low { background: rgba(113,113,122,0.15); color: #71717a; border: 1.5px solid rgba(113,113,122,0.2); }
+
+/* Type badge */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  font-family: 'Syne', sans-serif;
+}
+
+/* Flags */
+.flags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 260px;
+}
+
+.flag-tag {
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.flag-lp { background: rgba(239,68,68,0.15); color: #f87171; }
+.flag-pre { background: rgba(249,115,22,0.15); color: #fb923c; }
+.flag-jud { background: rgba(168,85,247,0.15); color: #c084fc; }
+.flag-tax { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.flag-mech { background: rgba(6,182,212,0.15); color: #22d3ee; }
+.flag-pro { background: rgba(34,197,94,0.15); color: #4ade80; }
+.flag-llc { background: rgba(234,179,8,0.15); color: #facc15; }
+.flag-new { background: rgba(249,115,22,0.2); color: #f97316; border: 1px solid rgba(249,115,22,0.3); }
+
+/* Address cell */
+.addr-stack { display: flex; flex-direction: column; gap: 2px; }
+.addr-main { color: var(--text); font-size: 12px; }
+.addr-sub { color: var(--muted); font-size: 10px; }
+.no-addr { color: var(--dim); font-size: 11px; font-style: italic; }
+
+/* Owner cell */
+.owner-text {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text);
+  font-size: 12px;
+}
+
+/* Amount */
+.amount-text { color: var(--green); font-weight: 500; }
+.amount-none { color: var(--dim); }
+
+/* Link */
+.doc-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 11px;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.doc-link:hover { opacity: 0.7; }
+
+/* Filed date */
+.date-text { color: var(--muted); font-size: 11px; }
+.date-new { color: var(--accent); }
+
+/* State badge */
+.state-badge {
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--muted);
+  gap: 16px;
+}
+
+.empty-state h2 {
+  font-family: 'Instrument Serif', serif;
+  font-size: 28px;
+  color: var(--dim);
+  font-weight: 400;
+}
+
+.empty-state p { font-size: 12px; }
+
+/* Loading */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px;
+  gap: 12px;
+  color: var(--muted);
+}
+
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid var(--dim);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Detail panel (slide-in) */
+#detail-panel {
+  position: fixed;
+  right: 0; top: 64px;
+  width: 420px;
+  height: calc(100vh - 64px);
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+  z-index: 200;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+#detail-panel.open { transform: translateX(0); }
+#detail-panel::-webkit-scrollbar { width: 3px; }
+#detail-panel::-webkit-scrollbar-thumb { background: var(--dim); }
+
+.panel-close {
+  position: absolute;
+  top: 1rem; right: 1rem;
+  width: 30px; height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  transition: all 0.15s;
+}
+
+.panel-close:hover { border-color: var(--border-bright); color: var(--text); }
+
+.panel-score-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 1.5rem;
+  padding-top: 8px;
+}
+
+.panel-score-big {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 48px;
+  line-height: 1;
+}
+
+.panel-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
+}
+
+.panel-meta { font-size: 11px; color: var(--muted); }
+
+.panel-section {
+  border-top: 1px solid var(--border);
+  padding-top: 1rem;
+  margin-top: 1rem;
+}
+
+.panel-section h4 {
+  font-family: 'Syne', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-row:last-child { border-bottom: none; }
+.detail-key { color: var(--muted); font-size: 11px; }
+.detail-val { color: var(--text); font-size: 12px; text-align: right; max-width: 240px; word-break: break-word; }
+
+.panel-flags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+
+.panel-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1rem;
+  padding: 10px 16px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+  text-decoration: none;
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  transition: background 0.2s;
+}
+
+.panel-link:hover { background: var(--accent2); }
+
+/* Overlay */
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 150;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+#overlay.visible { opacity: 1; pointer-events: all; }
+
+/* Pagination */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.page-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.page-btn:hover { border-color: var(--border-bright); color: var(--text); }
+.page-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* Score bar (in score cell) */
+.score-wrap { display: flex; align-items: center; gap: 8px; }
+.score-bar-bg {
+  width: 48px; height: 3px;
+  background: var(--dim);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.score-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="logo">
+    <div class="logo-mark">MS</div>
+    <div>
+      <div class="logo-text">Motivated Seller Intel</div>
+      <div class="logo-sub">MN · OH · GA · IN Markets</div>
+    </div>
+  </div>
+  <div class="header-meta">
+    <span id="last-updated">Loading...</span>
+    <div class="live-dot" title="Auto-refreshes daily at 7am UTC"></div>
+  </div>
+</header>
+
+<div id="overlay" onclick="closePanel()"></div>
+
+<!-- ── DETAIL PANEL ── -->
+<div id="detail-panel">
+  <button class="panel-close" onclick="closePanel()">✕</button>
+  <div id="panel-content"></div>
+</div>
+
+<!-- ── LAYOUT ── -->
+<div class="layout">
+
+  <!-- ── SIDEBAR ── -->
+  <aside>
+
+    <!-- Stats -->
+    <div class="sidebar-section">
+      <h3>Overview</h3>
+      <div class="stat-grid">
+        <div class="stat-card full">
+          <div class="stat-num" id="stat-total">—</div>
+          <div class="stat-label">Total Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-address">—</div>
+          <div class="stat-label">w/ Address</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-high">—</div>
+          <div class="stat-label">Score 80+</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-mn">—</div>
+          <div class="stat-label">MN Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-oh">—</div>
+          <div class="stat-label">OH Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-ga">—</div>
+          <div class="stat-label">GA Leads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-in">—</div>
+          <div class="stat-label">IN Leads</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline Status -->
+    <div class="sidebar-section">
+      <h3>Pipeline Status</h3>
+      <div class="stat-grid">
+        <div class="stat-card full" style="border-color:rgba(34,197,94,0.3)">
+          <div class="stat-num" style="color:#22c55e" id="stat-skiptrace">—</div>
+          <div class="stat-label">Ready for Skip Trace</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:#3b82f6" id="stat-verified">—</div>
+          <div class="stat-label">Verified</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:#eab308" id="stat-review">—</div>
+          <div class="stat-label">Needs Review</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" style="color:#71717a" id="stat-nomatch">—</div>
+          <div class="stat-label">No Match</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="sidebar-section">
+      <h3>Search</h3>
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="search-input" placeholder="Owner name, address..." oninput="applyFilters()">
+      </div>
+    </div>
+
+    <!-- Lead Type Filter -->
+    <div class="sidebar-section">
+      <h3>Lead Type</h3>
+      <div class="filter-group" id="type-filters">
+        <div class="filter-item active" data-cat="ALL" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#71717a"></div>
+          <span class="filter-name">All Types</span>
+          <span class="filter-count" id="cnt-ALL">—</span>
+        </div>
+        <div class="filter-item" data-cat="LP" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#ef4444"></div>
+          <span class="filter-name">Lis Pendens</span>
+          <span class="filter-count" id="cnt-LP">—</span>
+        </div>
+        <div class="filter-item" data-cat="NOFC" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#f97316"></div>
+          <span class="filter-name">Foreclosure</span>
+          <span class="filter-count" id="cnt-NOFC">—</span>
+        </div>
+        <div class="filter-item" data-cat="TAXDEED" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#eab308"></div>
+          <span class="filter-name">Tax Deed</span>
+          <span class="filter-count" id="cnt-TAXDEED">—</span>
+        </div>
+        <div class="filter-item" data-cat="JUD" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#a855f7"></div>
+          <span class="filter-name">Judgment</span>
+          <span class="filter-count" id="cnt-JUD">—</span>
+        </div>
+        <div class="filter-item" data-cat="LN" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#3b82f6"></div>
+          <span class="filter-name">Liens</span>
+          <span class="filter-count" id="cnt-LN">—</span>
+        </div>
+        <div class="filter-item" data-cat="PRO" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#22c55e"></div>
+          <span class="filter-name">Probate</span>
+          <span class="filter-count" id="cnt-PRO">—</span>
+        </div>
+        <div class="filter-item" data-cat="NOC" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#06b6d4"></div>
+          <span class="filter-name">NOC</span>
+          <span class="filter-count" id="cnt-NOC">—</span>
+        </div>
+        <div class="filter-item" data-cat="DIVORCE" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#f43f5e"></div>
+          <span class="filter-name">Divorce</span>
+          <span class="filter-count" id="cnt-DIVORCE">—</span>
+        </div>
+        <div class="filter-item" data-cat="LNMECH" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#06b6d4"></div>
+          <span class="filter-name">Mechanic Lien</span>
+          <span class="filter-count" id="cnt-LNMECH">—</span>
+        </div>
+        <div class="filter-item" data-cat="LNIRS" onclick="setTypeFilter(this)">
+          <div class="filter-dot" style="background:#3b82f6"></div>
+          <span class="filter-name">Tax / IRS Lien</span>
+          <span class="filter-count" id="cnt-LNIRS">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- State filter -->
+    <div class="sidebar-section">
+      <h3>State</h3>
+      <div class="state-chips" id="state-chips">
+        <div class="chip active" data-state="ALL" onclick="setStateFilter(this)">All</div>
+        <div class="chip" data-state="MN" onclick="setStateFilter(this)">MN</div>
+        <div class="chip" data-state="OH" onclick="setStateFilter(this)">OH</div>
+        <div class="chip" data-state="GA" onclick="setStateFilter(this)">GA</div>
+        <div class="chip" data-state="IN" onclick="setStateFilter(this)">IN</div>
+      </div>
+    </div>
+
+    <!-- Status filter -->
+    <div class="sidebar-section">
+      <h3>Status</h3>
+      <div class="filter-group" id="status-filters">
+        <div class="filter-item active" data-status="ALL" onclick="setStatusFilter(this)">
+          <div class="filter-dot" style="background:#71717a"></div>
+          <span class="filter-name">All Statuses</span>
+          <span class="filter-count" id="scnt-ALL">—</span>
+        </div>
+        <div class="filter-item" data-status="ready_for_skiptrace" onclick="setStatusFilter(this)">
+          <div class="filter-dot" style="background:#22c55e"></div>
+          <span class="filter-name">Ready for Skip Trace</span>
+          <span class="filter-count" id="scnt-ready">—</span>
+        </div>
+        <div class="filter-item" data-status="verified" onclick="setStatusFilter(this)">
+          <div class="filter-dot" style="background:#3b82f6"></div>
+          <span class="filter-name">Verified</span>
+          <span class="filter-count" id="scnt-verified">—</span>
+        </div>
+        <div class="filter-item" data-status="needs_review" onclick="setStatusFilter(this)">
+          <div class="filter-dot" style="background:#eab308"></div>
+          <span class="filter-name">Needs Review</span>
+          <span class="filter-count" id="scnt-review">—</span>
+        </div>
+        <div class="filter-item" data-status="no_match" onclick="setStatusFilter(this)">
+          <div class="filter-dot" style="background:#71717a"></div>
+          <span class="filter-name">No Match</span>
+          <span class="filter-count" id="scnt-nomatch">—</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Score filter -->
+    <div class="sidebar-section">
+      <h3>Min Score</h3>
+      <div class="score-range">
+        <div class="range-row">
+          <span class="range-label">Threshold</span>
+          <span id="score-val">0</span>
+        </div>
+        <input type="range" id="score-range" min="0" max="100" value="0" step="5" oninput="onScoreRange(this)">
+      </div>
+    </div>
+
+    <!-- Export -->
+    <div class="sidebar-section" style="margin-top:auto">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="export-btn" style="background:#22c55e" onclick="exportByStatus('ready_for_skiptrace')">⬇ Ready for Skip Trace</button>
+        <button class="export-btn" style="background:#eab308;color:#000" onclick="exportByStatus('needs_review')">⬇ Needs Review</button>
+        <button class="export-btn" style="background:#71717a" onclick="exportByStatus('no_match')">⬇ No Match</button>
+        <button class="export-btn" onclick="exportCSV()">⬇ All Records (GHL)</button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main>
+
+    <!-- Market pills -->
+    <div class="market-bar" id="market-bar">
+      <div class="market-pill active" data-market="ALL" onclick="setMarketFilter(this)">
+        <span class="market-flag">🌎</span>
+        <span class="market-name">All Markets</span>
+        <span class="market-count" id="mcnt-ALL">—</span>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <div class="results-header">
+        <div class="results-count">Showing <span id="showing-count">—</span> leads</div>
+        <div class="sort-row">
+          <span class="sort-label">Sort:</span>
+          <button class="sort-btn active" onclick="setSort('score', this)">Score</button>
+          <button class="sort-btn" onclick="setSort('filed', this)">Date</button>
+          <button class="sort-btn" onclick="setSort('amount', this)">Amount</button>
+        </div>
+      </div>
+
+      <div id="table-container">
+        <div class="loading"><div class="spinner"></div> Loading records...</div>
+      </div>
+
+      <div id="pagination" class="pagination"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let allRecords = [];
+let filtered = [];
+let sortKey = 'score';
+let sortDir = -1; // -1 = desc, 1 = asc
+let activeCat = 'ALL';
+let activeState = 'ALL';
+let activeMarket = 'ALL';
+let activeStatus = 'ALL';
+let minScore = 0;
+let searchQ = '';
+let page = 1;
+const PAGE_SIZE = 50;
+
+// ── Doc type config ────────────────────────────────────────────────────────
+const TYPE_CFG = {
+  LP:       { color: '#ef4444', label: 'Lis Pendens' },
+  RELLP:    { color: '#71717a', label: 'Release LP' },
+  NOFC:     { color: '#f97316', label: 'Foreclosure' },
+  TAXDEED:  { color: '#eab308', label: 'Tax Deed' },
+  JUD:      { color: '#a855f7', label: 'Judgment' },
+  CCJ:      { color: '#c084fc', label: 'Cert. Judgment' },
+  DRJUD:    { color: '#d8b4fe', label: 'Dom. Judgment' },
+  DIVORCE:  { color: '#f43f5e', label: 'Divorce' },
+  LNCORPTX: { color: '#3b82f6', label: 'Corp Tax Lien' },
+  LNIRS:    { color: '#60a5fa', label: 'Tax / IRS Lien' },
+  LNFED:    { color: '#93c5fd', label: 'Federal Lien' },
+  LN:       { color: '#71717a', label: 'Lien' },
+  LNMECH:   { color: '#06b6d4', label: 'Mechanic Lien' },
+  LNHOA:    { color: '#0ea5e9', label: 'HOA Lien' },
+  MEDLN:    { color: '#f43f5e', label: 'Medicaid Lien' },
+  PRO:      { color: '#22c55e', label: 'Probate' },
+  NOC:      { color: '#8b5cf6', label: 'NOC' },
+};
+
+const FLAG_CLASS = {
+  'Lis pendens':     'flag-lp',
+  'Pre-foreclosure': 'flag-pre',
+  'Judgment lien':   'flag-jud',
+  'Tax lien':        'flag-tax',
+  'Mechanic lien':   'flag-mech',
+  'Probate / estate':'flag-pro',
+  'LLC / corp owner':'flag-llc',
+  'New this week':   'flag-new',
+  'Divorce filing':  'flag-lp',
+};
+
+// ── Status config ─────────────────────────────────────────────────────────
+const STATUS_CFG = {
+  'ready_for_skiptrace': { label: 'Skip Trace ✓', color: '#22c55e' },
+  'verified':            { label: 'Verified',      color: '#3b82f6' },
+  'needs_review':        { label: 'Review',        color: '#eab308' },
+  'no_match':            { label: 'No Match',      color: '#71717a' },
+  'duplicate':           { label: 'Duplicate',     color: '#52525b' },
+  'error':               { label: 'Error',         color: '#ef4444' },
+};
+
+const STATE_FLAGS = { MN: '🏔', OH: '🌽', GA: '🍑', IN: '🏎' };
+
+// ── Lien cats rollup ───────────────────────────────────────────────────────
+const LIEN_CATS   = new Set(['LN','LNMECH','LNHOA','LNIRS','LNFED','LNCORPTX','MEDLN']);
+const JUD_CATS    = new Set(['JUD','CCJ','DRJUD']);
+const DIVORCE_CATS = new Set(['DIVORCE','DRJUD']);
+
+function normalCat(cat) {
+  if (LIEN_CATS.has(cat)) return 'LN';
+  if (JUD_CATS.has(cat))  return 'JUD';
+  return cat;
+}
+
+// ── Load data ──────────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    // Read from main branch directly — works regardless of gh-pages deploy status
+    const DATA_URL = 'https://raw.githubusercontent.com/malexdurant-bot/MotivatedSeller_Intel/main/dashboard/records.json';
+    const resp = await fetch(DATA_URL + '?t=' + Date.now());
+    const data = await resp.json();
+    allRecords = data.records || [];
+
+    // Update header
+    const at = data.fetched_at ? new Date(data.fetched_at).toLocaleString() : 'Never';
+    document.getElementById('last-updated').textContent = 'Updated: ' + at;
+
+    // Stats
+    document.getElementById('stat-total').textContent = data.total || allRecords.length;
+    document.getElementById('stat-address').textContent = data.with_address || 0;
+    document.getElementById('stat-high').textContent = allRecords.filter(r=>r.score>=80).length;
+    document.getElementById('stat-mn').textContent = allRecords.filter(r=>r.state==='MN').length;
+    document.getElementById('stat-oh').textContent = allRecords.filter(r=>r.state==='OH').length;
+    document.getElementById('stat-ga').textContent = allRecords.filter(r=>r.state==='GA').length;
+    document.getElementById('stat-in').textContent = allRecords.filter(r=>r.state==='IN').length;
+
+    buildMarketPills();
+    updateTypeCounts();
+    applyFilters();
+  } catch(e) {
+    document.getElementById('table-container').innerHTML = `
+      <div class="empty-state">
+        <h2>No Data Yet</h2>
+        <p>Run the scraper or wait for the daily 7am UTC schedule.</p>
+        <p style="color:var(--dim);margin-top:8px;font-size:11px;">${e.message}</p>
+      </div>`;
+  }
+}
+
+// ── Build market pills ─────────────────────────────────────────────────────
+function buildMarketPills() {
+  const markets = {};
+  allRecords.forEach(r => {
+    const key = r.county + ' ' + r.state;
+    markets[key] = markets[key] || { label: r.county + ', ' + r.state, state: r.state, count: 0 };
+    markets[key].count++;
+  });
+
+  const bar = document.getElementById('market-bar');
+  document.getElementById('mcnt-ALL').textContent = allRecords.length;
+
+  Object.entries(markets).forEach(([key, m]) => {
+    const pill = document.createElement('div');
+    pill.className = 'market-pill';
+    pill.dataset.market = key;
+    pill.onclick = () => setMarketFilter(pill);
+    pill.innerHTML = `
+      <span class="market-flag">${STATE_FLAGS[m.state]||'📍'}</span>
+      <span class="market-name">${m.label}</span>
+      <span class="market-count">${m.count}</span>
+    `;
+    bar.appendChild(pill);
+  });
+}
+
+// ── Update type counts ─────────────────────────────────────────────────────
+function updateTypeCounts() {
+  const counts = {};
+  allRecords.forEach(r => {
+    // Count exact cat for specific filters
+    counts[r.cat] = (counts[r.cat]||0) + 1;
+    // Also count rolled-up LN and JUD
+    const nc = normalCat(r.cat);
+    if (nc !== r.cat) counts[nc] = (counts[nc]||0) + 1;
+  });
+  const total = allRecords.length;
+  document.getElementById('cnt-ALL').textContent = total;
+  ['LP','NOFC','TAXDEED','JUD','LN','PRO','NOC','RELLP','DIVORCE','LNMECH','LNIRS'].forEach(c => {
+    const el = document.getElementById('cnt-'+c);
+    if (el) el.textContent = counts[c] || 0;
+  });
+
+  // Status counts
+  const sCounts = {};
+  allRecords.forEach(r => { const s=r.record_status||''; sCounts[s]=(sCounts[s]||0)+1; });
+  document.getElementById('scnt-ALL').textContent = allRecords.length;
+  document.getElementById('scnt-ready').textContent = sCounts['ready_for_skiptrace']||0;
+  document.getElementById('scnt-verified').textContent = sCounts['verified']||0;
+  document.getElementById('scnt-review').textContent = sCounts['needs_review']||0;
+  document.getElementById('scnt-nomatch').textContent = sCounts['no_match']||0;
+
+  // Pipeline stat cards
+  const el_s = document.getElementById('stat-skiptrace'); if(el_s) el_s.textContent = sCounts['ready_for_skiptrace']||0;
+  const el_v = document.getElementById('stat-verified');  if(el_v) el_v.textContent = sCounts['verified']||0;
+  const el_r = document.getElementById('stat-review');    if(el_r) el_r.textContent = sCounts['needs_review']||0;
+  const el_n = document.getElementById('stat-nomatch');   if(el_n) el_n.textContent = sCounts['no_match']||0;
+}
+
+// ── Filters ────────────────────────────────────────────────────────────────
+function setTypeFilter(el) {
+  document.querySelectorAll('#type-filters .filter-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  activeCat = el.dataset.cat;
+  page = 1;
+  applyFilters();
+}
+
+function setStateFilter(el) {
+  document.querySelectorAll('#state-chips .chip').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  activeState = el.dataset.state;
+  page = 1;
+  applyFilters();
+}
+
+function setMarketFilter(el) {
+  document.querySelectorAll('#market-bar .market-pill').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  activeMarket = el.dataset.market;
+  page = 1;
+  applyFilters();
+}
+
+function onScoreRange(el) {
+  minScore = parseInt(el.value);
+  document.getElementById('score-val').textContent = minScore;
+  page = 1;
+  applyFilters();
+}
+
+function setStatusFilter(el) {
+  document.querySelectorAll('#status-filters .filter-item').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  activeStatus = el.dataset.status;
+  page = 1;
+  applyFilters();
+}
+
+function setSort(key, btn) {
+  if (sortKey === key) sortDir *= -1;
+  else { sortKey = key; sortDir = key === 'filed' ? -1 : -1; }
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  applyFilters();
+}
+
+function applyFilters() {
+  searchQ = document.getElementById('search-input').value.toLowerCase().trim();
+
+  filtered = allRecords.filter(r => {
+    if (activeCat !== 'ALL') {
+      // Specific subcategory filters match exact cat
+      if (['DIVORCE','LNMECH','LNIRS','LNFED','LNCORPTX','LP','NOFC','TAXDEED','PRO','NOC','RELLP'].includes(activeCat)) {
+        if (r.cat !== activeCat) return false;
+      } else {
+        // Rolled-up filters (JUD, LN) match their group
+        if (normalCat(r.cat) !== activeCat) return false;
+      }
+    }
+    if (activeState !== 'ALL' && r.state !== activeState) return false;
+    if (activeMarket !== 'ALL' && (r.county+' '+r.state) !== activeMarket) return false;
+    if (activeStatus !== 'ALL' && r.record_status !== activeStatus) return false;
+    const confScore = r.confidence_score || r.score || 0;
+    if (confScore < minScore) return false;
+    if (searchQ) {
+      const blob = [r.owner_name_verified, r.owner, r.property_address_verified,
+                    r.prop_address, r.mailing_address, r.mail_address,
+                    r.doc_num, r.case_number, r.parcel_id,
+                    r.cat_label, r.county].join(' ').toLowerCase();
+      if (!blob.includes(searchQ)) return false;
+    }
+    return true;
+  });
+
+  // Sort
+  filtered.sort((a,b) => {
+    let va = a[sortKey], vb = b[sortKey];
+    if (sortKey === 'amount') { va = va||0; vb = vb||0; }
+    if (sortKey === 'filed') { va = va||''; vb = vb||''; }
+    if (sortKey === 'score') { va = va||0; vb = vb||0; }
+    if (va < vb) return sortDir;
+    if (va > vb) return -sortDir;
+    return 0;
+  });
+
+  document.getElementById('showing-count').textContent = filtered.length;
+  renderTable();
+  renderPagination();
+}
+
+// ── Render table ───────────────────────────────────────────────────────────
+function renderTable() {
+  const start = (page-1)*PAGE_SIZE;
+  const rows = filtered.slice(start, start+PAGE_SIZE);
+
+  if (!rows.length) {
+    document.getElementById('table-container').innerHTML = `
+      <div class="empty-state">
+        <h2>No Leads Found</h2>
+        <p>Try adjusting filters or check back after the next scrape run.</p>
+      </div>`;
+    return;
+  }
+
+  const today = new Date();
+  const weekAgo = new Date(today - 7*864e5);
+
+  let html = `<table>
+    <thead><tr>
+      <th onclick="thSort('confidence_score',this)">Conf.</th>
+      <th onclick="thSort('cat',this)">Type</th>
+      <th onclick="thSort('owner',this)">Owner</th>
+      <th onclick="thSort('prop_address',this)">Property Address</th>
+      <th onclick="thSort('mail_address',this)">Mailing Address</th>
+      <th onclick="thSort('parcel_id',this)">Parcel</th>
+      <th>Status</th>
+      <th>Flags</th>
+      <th onclick="thSort('filed',this)">Filed</th>
+      <th>State</th>
+      <th>Link</th>
+    </tr></thead><tbody>`;
+
+  rows.forEach((r, i) => {
+    const tc = TYPE_CFG[r.cat] || { color: '#71717a', label: r.cat_label || r.cat };
+    const conf = r.confidence_score || r.score || 0;
+    const scoreCls = conf >= 90 ? 'score-high' : conf >= 70 ? 'score-med' : 'score-low';
+    const filedDate = r.filed ? new Date(r.filed) : null;
+    const isNew = filedDate && filedDate >= weekAgo;
+
+    const flagsHtml = (r.flags||[]).map(f =>
+      `<span class="flag-tag ${FLAG_CLASS[f]||''}">${f}</span>`
+    ).join('');
+
+    const addrVerified = r.property_address_verified || r.prop_address;
+    const addrCity = r.property_city || r.prop_city;
+    const addrState = r.property_state || r.prop_state;
+    const addrZip = r.property_zip || r.prop_zip;
+    const propAddr = addrVerified
+      ? `<div class="addr-stack"><div class="addr-main">${esc(addrVerified)}</div><div class="addr-sub">${esc(addrCity)}${addrState?' '+esc(addrState):''} ${esc(addrZip)}</div></div>`
+      : `<span class="no-addr">No address</span>`;
+
+    const mailAddr = (r.mailing_address||r.mail_address)
+      ? `<div class="addr-stack"><div class="addr-main">${esc(r.mailing_address||r.mail_address)}</div><div class="addr-sub">${esc(r.mailing_city||r.mail_city)} ${esc(r.mailing_state||r.mail_state)} ${esc(r.mailing_zip||r.mail_zip)}</div></div>`
+      : `<span class="no-addr">—</span>`;
+
+    const parcelHtml = r.parcel_id
+      ? `<span style="color:var(--muted);font-size:11px">${esc(r.parcel_id)}</span>`
+      : `<span class="no-addr">—</span>`;
+
+    const statusLabel = STATUS_CFG[r.record_status] || {label: r.record_status||'—', color:'#71717a'};
+    const statusHtml = `<span class="type-badge" style="background:${statusLabel.color}22;color:${statusLabel.color};border:1px solid ${statusLabel.color}44;font-size:10px">${statusLabel.label}</span>`;
+
+    const ownerDisplay = r.owner_name_verified || r.owner || '';
+
+    const linkHtml = r.source_url || r.clerk_url
+      ? `<a class="doc-link" href="${esc(r.source_url||r.clerk_url)}" target="_blank" rel="noopener">↗ View</a>`
+      : '—';
+
+    const dateHtml = r.filing_date || r.filed
+      ? `<span class="date-text ${isNew?'date-new':''}">${(r.filing_date||r.filed).slice(0,10)}</span>`
+      : '—';
+
+    const barColor = conf >= 90 ? '#ef4444' : conf >= 70 ? '#f97316' : '#71717a';
+
+    html += `<tr onclick="openDetail(${i + start})" style="cursor:pointer" class="${isNew?'highlight':''}">
+      <td>
+        <div class="score-wrap">
+          <div class="score-badge ${scoreCls}">${conf}</div>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:${conf}%;background:${barColor}"></div></div>
+        </div>
+      </td>
+      <td><span class="type-badge" style="background:${tc.color}22;color:${tc.color};border:1px solid ${tc.color}44">${tc.label}</span></td>
+      <td><div class="owner-text" title="${esc(ownerDisplay)}">${esc(ownerDisplay)||'—'}</div></td>
+      <td>${propAddr}</td>
+      <td>${mailAddr}</td>
+      <td>${parcelHtml}</td>
+      <td>${statusHtml}</td>
+      <td><div class="flags-wrap">${flagsHtml||'<span class="no-addr">—</span>'}</div></td>
+      <td>${dateHtml}</td>
+      <td><span class="state-badge">${r.state}</span></td>
+      <td onclick="event.stopPropagation()">${linkHtml}</td>
+    </tr>`;
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('table-container').innerHTML = html;
+}
+
+function thSort(key, th) {
+  const active = th.classList.contains('sort-asc') || th.classList.contains('sort-desc');
+  document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sort-asc','sort-desc'));
+  if (active && sortKey === key) {
+    sortDir *= -1;
+  } else {
+    sortKey = key; sortDir = -1;
+  }
+  th.classList.add(sortDir === -1 ? 'sort-desc' : 'sort-asc');
+  applyFilters();
+}
+
+// ── Pagination ─────────────────────────────────────────────────────────────
+function renderPagination() {
+  const total = Math.ceil(filtered.length / PAGE_SIZE);
+  if (total <= 1) { document.getElementById('pagination').innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" onclick="goPage(${page-1})" ${page===1?'disabled':''}>←</button>`;
+  for (let p=1; p<=total; p++) {
+    if (total > 8 && Math.abs(p-page) > 2 && p!==1 && p!==total) {
+      if (p===2||p===total-1) html+='<span style="color:var(--muted)">…</span>';
+      continue;
+    }
+    html += `<button class="page-btn ${p===page?'active':''}" onclick="goPage(${p})">${p}</button>`;
+  }
+  html += `<button class="page-btn" onclick="goPage(${page+1})" ${page===total?'disabled':''}>→</button>`;
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goPage(p) {
+  page = p;
+  renderTable();
+  renderPagination();
+  document.querySelector('.table-wrap').scrollTop = 0;
+}
+
+// ── Detail panel ───────────────────────────────────────────────────────────
+function openDetail(idx) {
+  const r = filtered[idx];
+  if (!r) return;
+
+  const tc = TYPE_CFG[r.cat] || { color: '#71717a', label: r.cat_label };
+  const scoreCls = r.score >= 80 ? 'score-high' : r.score >= 55 ? 'score-med' : 'score-low';
+
+  const flagsHtml = (r.flags||[]).map(f =>
+    `<span class="flag-tag ${FLAG_CLASS[f]||''}" style="font-size:12px;padding:4px 10px">${f}</span>`
+  ).join('');
+
+  document.getElementById('panel-content').innerHTML = `
+    <div class="panel-score-row">
+      <div class="panel-score-big ${scoreCls}">${r.score}</div>
+      <div>
+        <div style="color:var(--muted);font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">Seller Score</div>
+        <span class="type-badge" style="background:${tc.color}22;color:${tc.color};border:1px solid ${tc.color}44;font-size:12px">${tc.label}</span>
+      </div>
+    </div>
+
+    <div class="panel-title">${esc(r.owner||'Unknown Owner')}</div>
+    <div class="panel-meta">${esc(r.doc_type)} · ${esc(r.case_number||r.doc_num)} · ${r.state}</div>
+    <div style="margin-top:6px">
+      <span class="type-badge" style="background:${(STATUS_CFG[r.record_status]||{color:'#71717a'}).color}22;color:${(STATUS_CFG[r.record_status]||{color:'#71717a'}).color};border:1px solid ${(STATUS_CFG[r.record_status]||{color:'#71717a'}).color}44;font-size:11px">
+        ${(STATUS_CFG[r.record_status]||{label:r.record_status||'Unknown'}).label}
+      </span>
+      <span style="font-size:11px;color:var(--muted);margin-left:8px">Confidence: ${r.confidence_score||r.score||0}</span>
+    </div>
+
+    <div class="panel-section">
+      <h4>Property</h4>
+      <div class="detail-row"><span class="detail-key">Verified Address</span><span class="detail-val">${esc(r.property_address_verified||r.prop_address||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">City / State / Zip</span><span class="detail-val">${esc(r.property_city||r.prop_city||'')} ${esc(r.property_state||r.prop_state||'')} ${esc(r.property_zip||r.prop_zip||'')}</span></div>
+      <div class="detail-row"><span class="detail-key">Parcel ID</span><span class="detail-val">${esc(r.parcel_id||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Property Type</span><span class="detail-val">${esc(r.property_type||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Assessed Value</span><span class="detail-val">${r.assessed_value?'$'+Number(r.assessed_value).toLocaleString():'—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Last Sale Date</span><span class="detail-val">${esc(r.last_sale_date||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Last Sale Price</span><span class="detail-val">${r.last_sale_price?'$'+Number(r.last_sale_price).toLocaleString():'—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Occupancy</span><span class="detail-val">${esc(r.occupancy_indicator||'—')}</span></div>
+    </div>
+
+    <div class="panel-section">
+      <h4>Owner</h4>
+      <div class="detail-row"><span class="detail-key">Verified Name</span><span class="detail-val">${esc(r.owner_name_verified||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Raw Name</span><span class="detail-val">${esc(r.owner_name_raw||r.owner||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Mailing Address</span><span class="detail-val">${esc(r.mailing_address||r.mail_address||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Mailing City/St/Zip</span><span class="detail-val">${esc(r.mailing_city||r.mail_city||'')} ${esc(r.mailing_state||r.mail_state||'')} ${esc(r.mailing_zip||r.mail_zip||'')}</span></div>
+    </div>
+
+    <div class="panel-section">
+      <h4>Match metadata</h4>
+      <div class="detail-row"><span class="detail-key">Match Method</span><span class="detail-val">${esc(r.match_method||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Confidence</span><span class="detail-val">${r.confidence_score||r.score||0}</span></div>
+      <div class="detail-row"><span class="detail-key">Status</span><span class="detail-val">${esc(r.record_status||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Notes</span><span class="detail-val">${esc(r.notes||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Source</span><span class="detail-val">${esc(r.source_system||r.source||'—')}</span></div>
+    </div>
+
+    <div class="panel-section">
+      <h4>Flags</h4>
+      <div class="panel-flags">${flagsHtml||'<span class="no-addr">None</span>'}</div>
+    </div>
+
+    <div class="panel-section">
+      <h4>Document</h4>
+      <div class="detail-row"><span class="detail-key">Doc Number</span><span class="detail-val">${esc(r.doc_num)}</span></div>
+      <div class="detail-row"><span class="detail-key">Doc Type</span><span class="detail-val">${esc(r.doc_type)}</span></div>
+      <div class="detail-row"><span class="detail-key">Filed</span><span class="detail-val">${esc(r.filed)}</span></div>
+      <div class="detail-row"><span class="detail-key">Grantor/Owner</span><span class="detail-val">${esc(r.owner)}</span></div>
+      <div class="detail-row"><span class="detail-key">Grantee</span><span class="detail-val">${esc(r.grantee||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">Amount</span><span class="detail-val" style="color:var(--green)">${r.amount?'$'+Number(r.amount).toLocaleString():'—'}</span></div>
+      <div class="detail-row"><span class="detail-key">Legal Desc.</span><span class="detail-val" style="white-space:normal;font-size:11px">${esc(r.legal||'—')}</span></div>
+    </div>
+
+    <div class="panel-section">
+      <h4>Property Address</h4>
+      <div class="detail-row"><span class="detail-key">Address</span><span class="detail-val">${esc(r.prop_address||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">City/State/Zip</span><span class="detail-val">${esc(r.prop_city)} ${esc(r.prop_state)} ${esc(r.prop_zip)}</span></div>
+    </div>
+
+    <div class="panel-section">
+      <h4>Mailing Address</h4>
+      <div class="detail-row"><span class="detail-key">Address</span><span class="detail-val">${esc(r.mail_address||'—')}</span></div>
+      <div class="detail-row"><span class="detail-key">City/State/Zip</span><span class="detail-val">${esc(r.mail_city)} ${esc(r.mail_state)} ${esc(r.mail_zip)}</span></div>
+    </div>
+
+    <div class="panel-section">
+      <h4>Source</h4>
+      <div class="detail-row"><span class="detail-key">County</span><span class="detail-val">${esc(r.county)}, ${esc(r.state)}</span></div>
+      <div class="detail-row"><span class="detail-key">Market</span><span class="detail-val" style="white-space:normal">${esc(r.source)}</span></div>
+    </div>
+
+    ${r.clerk_url ? `<a class="panel-link" href="${esc(r.clerk_url)}" target="_blank" rel="noopener">↗ View Public Record</a>` : ''}
+  `;
+
+  document.getElementById('detail-panel').classList.add('open');
+  document.getElementById('overlay').classList.add('visible');
+}
+
+function closePanel() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('visible');
+}
+
+// ── CSV Export ─────────────────────────────────────────────────────────────
+function exportByStatus(status) {
+  const recs = allRecords.filter(r => r.record_status === status);
+  if (!recs.length) { alert('No records with status: ' + status); return; }
+  const FIELDS = [
+    'date_pulled','market','county','state','lead_type',
+    'case_number','filing_date',
+    'owner_name_verified','owner_name_raw',
+    'property_address_verified','property_city','property_state','property_zip',
+    'mailing_address','mailing_city','mailing_state','mailing_zip',
+    'parcel_id','property_type','assessed_value',
+    'last_sale_date','last_sale_price','occupancy_indicator',
+    'match_method','confidence_score','record_status','notes',
+    'source_system','source_url'
+  ];
+  const rows = [FIELDS.join(',')];
+  recs.forEach(r => {
+    rows.push(FIELDS.map(f => '"'+(String(r[f]||'')).replace(/"/g,'""')+'"').join(','));
+  });
+  const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = status + '_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+function exportCSV() {
+  const headers = [
+    'First Name','Last Name','Mailing Address','Mailing City','Mailing State','Mailing Zip',
+    'Property Address','Property City','Property State','Property Zip',
+    'Lead Type','Document Type','Date Filed','Document Number','Amount/Debt Owed',
+    'Seller Score','Motivated Seller Flags','Source','Public Records URL'
+  ];
+
+  function splitName(n) {
+    const p = (n||'').trim().split(' ');
+    if (!p.length) return ['',''];
+    if (p.length === 1) return [p[0],''];
+    return [p.slice(0,-1).join(' '), p[p.length-1]];
+  }
+
+  const rows = [headers.join(',')];
+  filtered.forEach(r => {
+    const [first,last] = splitName(r.owner);
+    const row = [
+      first, last,
+      r.mail_address||'', r.mail_city||'', r.mail_state||'', r.mail_zip||'',
+      r.prop_address||'', r.prop_city||'', r.prop_state||'', r.prop_zip||'',
+      r.cat_label||r.cat||'', r.doc_type||'', r.filed||'', r.doc_num||'',
+      r.amount||'', r.score||0,
+      (r.flags||[]).join('|'), r.source||'', r.clerk_url||''
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`);
+    rows.push(row.join(','));
+  });
+
+  const blob = new Blob([rows.join('\n')], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `motivated_sellers_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+loadData();
+// Auto-refresh every 5 minutes
+setInterval(loadData, 5 * 60 * 1000);
+</script>
+</body>
+</html>

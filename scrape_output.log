@@ -1,0 +1,210 @@
+2026-05-03 10:34:20,593 [INFO] motivated_seller: Loaded 14 county configs from counties/*.json
+2026-05-03 10:34:20,594 [INFO] motivated_seller: Loaded 14 county configs from counties/*.json
+2026-05-03 10:34:20,594 [INFO] motivated_seller: ============================================================
+2026-05-03 10:34:20,594 [INFO] motivated_seller: Motivated Seller Scraper — 2026-05-03 10:34
+2026-05-03 10:34:20,594 [INFO] motivated_seller: Lookback: 7 days (2026-04-26 → 2026-05-03)
+2026-05-03 10:34:20,594 [INFO] motivated_seller: Markets: 14
+2026-05-03 10:34:20,594 [INFO] motivated_seller: ============================================================
+2026-05-03 10:34:20,594 [INFO] motivated_seller: 
+→ Processing: Butler County OH (Hamilton/Middletown)
+2026-05-03 10:34:22,470 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:34:22,470 [INFO] motivated_seller: [Ohio Butler] Fetching sheriff sale records
+/home/runner/work/MotivatedSeller_Intel/MotivatedSeller_Intel/scraper/fetch.py:1398: XMLParsedAsHTMLWarning: It looks like you're using an HTML parser to parse an XML document.
+
+Assuming this really is an XML document, what you're doing might work, but you should know that using an XML parser will be more reliable. To parse this document as XML, make sure you have the Python package 'lxml' installed, and pass the keyword argument `features="xml"` into the BeautifulSoup constructor.
+
+If you want or need to use an HTML parser on this document, you can make this warning go away by filtering it. To do that, run this code before calling the BeautifulSoup constructor:
+
+    from bs4 import XMLParsedAsHTMLWarning
+    import warnings
+
+    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+
+  soup = BeautifulSoup(r.text, "lxml")
+2026-05-03 10:34:32,520 [INFO] motivated_seller: [Ohio Butler] Sheriff page: 13 records
+/home/runner/work/MotivatedSeller_Intel/MotivatedSeller_Intel/scraper/fetch.py:1574: XMLParsedAsHTMLWarning: It looks like you're using an HTML parser to parse an XML document.
+
+Assuming this really is an XML document, what you're doing might work, but you should know that using an XML parser will be more reliable. To parse this document as XML, make sure you have the Python package 'lxml' installed, and pass the keyword argument `features="xml"` into the BeautifulSoup constructor.
+
+If you want or need to use an HTML parser on this document, you can make this warning go away by filtering it. To do that, run this code before calling the BeautifulSoup constructor:
+
+    from bs4 import XMLParsedAsHTMLWarning
+    import warnings
+
+    warnings.filterwarnings("ignore", category=XMLParsedAsHTMLWarning)
+
+  soup = BeautifulSoup(r.text, "lxml")
+2026-05-03 10:34:32,640 [INFO] motivated_seller: [Ohio Butler] DDN divorce: 0 records
+2026-05-03 10:34:33,792 [INFO] motivated_seller: [Ohio Butler] DDN tax_lien: 3 records
+2026-05-03 10:34:34,925 [INFO] motivated_seller: [Ohio Butler] DDN legal: 6 records
+2026-05-03 10:34:35,925 [INFO] motivated_seller: [Ohio Butler] Total: 22 records
+2026-05-03 10:34:35,926 [INFO] motivated_seller:   Requests: 22 records
+2026-05-03 10:34:35,926 [INFO] motivated_seller:   Unique: 19 records for Butler OH
+2026-05-03 10:34:35,926 [INFO] motivated_seller: 
+→ Processing: Cherokee County GA (Canton)
+2026-05-03 10:34:36,334 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:34:36,334 [INFO] motivated_seller: [Georgia Cherokee] Fetching dual source
+2026-05-03 10:34:36,751 [INFO] motivated_seller: [FBL Cherokee] https://www.foreclosurebidslist.com/foreclosures/ga/cherokee: 0 so far
+2026-05-03 10:34:37,912 [INFO] motivated_seller: [FBL Cherokee] https://www.foreclosurebidslist.com/foreclosures/ga/cherokee/2026/4: 0 so far
+2026-05-03 10:34:39,035 [INFO] motivated_seller: [FBL Cherokee] https://www.foreclosurebidslist.com/foreclosures/ga/cherokee/2026/5: 0 so far
+2026-05-03 10:34:40,125 [INFO] motivated_seller: [FBL Cherokee] https://www.foreclosurebidslist.com/foreclosures/ga/cherokee/2026/6: 0 so far
+2026-05-03 10:34:41,208 [INFO] motivated_seller: [FBL Cherokee] https://www.foreclosurebidslist.com/foreclosures/ga/cherokee/2026/7: 0 so far
+2026-05-03 10:34:42,209 [INFO] motivated_seller: [GA Cherokee] FBL: 0 records
+2026-05-03 10:34:44,939 [INFO] motivated_seller: [GA Cherokee] GPN: 0 raw notices
+2026-05-03 10:34:44,939 [INFO] motivated_seller: [GA Cherokee] Final: 0 (0 GPN-only)
+2026-05-03 10:34:44,940 [INFO] motivated_seller:   Requests: 0 records
+2026-05-03 10:34:44,940 [INFO] motivated_seller:   Unique: 0 records for Cherokee GA
+2026-05-03 10:34:44,940 [INFO] motivated_seller: 
+→ Processing: Cuyahoga County OH (Cleveland)
+2026-05-03 10:34:45,347 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:34:45,347 [INFO] motivated_seller: [Cuyahoga] Starting daily scrape
+2026-05-03 10:34:49,822 [INFO] motivated_seller: [Cuyahoga] Court docket: 0 records
+2026-05-03 10:35:00,297 [INFO] motivated_seller: [Cuyahoga] Recorder LIS PENDENS: 0 records
+2026-05-03 10:35:11,540 [INFO] motivated_seller: [Cuyahoga] Recorder MECHANIC LIEN: 0 records
+2026-05-03 10:35:22,780 [INFO] motivated_seller: [Cuyahoga] Recorder FEDERAL TAX LIEN: 0 records
+2026-05-03 10:35:34,029 [INFO] motivated_seller: [Cuyahoga] Recorder JUDGMENT: 0 records
+2026-05-03 10:35:35,194 [INFO] motivated_seller: [Cuyahoga] DLN sheriff sales: 0 records
+2026-05-03 10:35:35,194 [INFO] motivated_seller: [Cuyahoga] Total raw: 0
+2026-05-03 10:35:35,198 [INFO] motivated_seller:   Requests: 0 records
+2026-05-03 10:35:35,198 [INFO] motivated_seller:   Unique: 0 records for Cuyahoga OH
+2026-05-03 10:35:35,198 [INFO] motivated_seller: 
+→ Processing: Forsyth County GA (Cumming)
+2026-05-03 10:35:35,606 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:35:35,606 [INFO] motivated_seller: [Georgia Forsyth] Fetching dual source
+2026-05-03 10:35:35,895 [INFO] motivated_seller: [FBL Forsyth] https://www.foreclosurebidslist.com/foreclosures/ga/forsyth: 0 so far
+2026-05-03 10:35:37,011 [INFO] motivated_seller: [FBL Forsyth] https://www.foreclosurebidslist.com/foreclosures/ga/forsyth/2026/4: 0 so far
+2026-05-03 10:35:38,197 [INFO] motivated_seller: [FBL Forsyth] https://www.foreclosurebidslist.com/foreclosures/ga/forsyth/2026/5: 0 so far
+2026-05-03 10:35:39,288 [INFO] motivated_seller: [FBL Forsyth] https://www.foreclosurebidslist.com/foreclosures/ga/forsyth/2026/6: 0 so far
+2026-05-03 10:35:40,377 [INFO] motivated_seller: [FBL Forsyth] https://www.foreclosurebidslist.com/foreclosures/ga/forsyth/2026/7: 0 so far
+2026-05-03 10:35:41,377 [INFO] motivated_seller: [GA Forsyth] FBL: 0 records
+2026-05-03 10:35:43,931 [INFO] motivated_seller: [GA Forsyth] GPN: 0 raw notices
+2026-05-03 10:35:43,931 [INFO] motivated_seller: [GA Forsyth] Final: 0 (0 GPN-only)
+2026-05-03 10:35:43,931 [INFO] motivated_seller:   Requests: 0 records
+2026-05-03 10:35:43,931 [INFO] motivated_seller:   Unique: 0 records for Forsyth GA
+2026-05-03 10:35:43,931 [INFO] motivated_seller: 
+→ Processing: Hamilton County IN (Carmel/Fishers)
+2026-05-03 10:35:48,359 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:35:48,359 [INFO] motivated_seller: [Indiana Hamilton] Starting fetch, type=api
+2026-05-03 10:35:49,886 [INFO] motivated_seller: [Hamilton API] 399 raw items after unwrap
+2026-05-03 10:35:49,886 [INFO] motivated_seller: [Hamilton API] First item keys: ['id', 'causeNumber', 'parcelID', 'address1', 'address2', 'city', 'township', 'townshipName', 'zip', 'latestStatus', 'latestStatusName', 'latestSaleDate', 'latestRegistrationTime', 'latestSaleTime', 'sales']
+2026-05-03 10:35:49,886 [INFO] motivated_seller: [Hamilton API] First item sample: {'id': 31, 'causeNumber': '29D01-2104-MF-002529', 'parcelID': '29-10-04-010-005.000-013', 'address1': '16815 Meadow Wood Court', 'address2': '', 'city': 'Noblesville', 'township': 6, 'townshipName': 'Noblesville', 'zip': '46062', 'latestStatus': 0, 'latestStatusName': None, 'latestSaleDate': None, '
+2026-05-03 10:35:59,075 [INFO] motivated_seller: [Indiana Hamilton] Total: 57
+2026-05-03 10:35:59,075 [INFO] motivated_seller:   Requests: 57 records
+2026-05-03 10:35:59,075 [INFO] motivated_seller:   Unique: 57 records for Hamilton IN
+2026-05-03 10:35:59,075 [INFO] motivated_seller: 
+→ Processing: Hendricks County IN (Avon/Plainfield)
+2026-05-03 10:36:07,578 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:36:07,578 [INFO] motivated_seller: [Indiana Hendricks] Starting fetch, type=html
+2026-05-03 10:36:16,641 [INFO] motivated_seller: [Indiana Hendricks] Trying EagleWeb fallback
+2026-05-03 10:36:28,953 [INFO] motivated_seller: [Indiana Hendricks] Total: 0
+2026-05-03 10:36:28,954 [INFO] motivated_seller:   Requests: 0 records
+2026-05-03 10:36:28,954 [INFO] motivated_seller:   Unique: 0 records for Hendricks IN
+2026-05-03 10:36:28,954 [INFO] motivated_seller: 
+→ Processing: Hennepin County MN (Minneapolis)
+2026-05-03 10:36:29,411 [ERROR] motivated_seller: [Playwright hennepin_mn] Error: Page.goto: net::ERR_NAME_NOT_RESOLVED at https://recorder.hennepin.us/recorder/web/
+Call log:
+  - navigating to "https://recorder.hennepin.us/recorder/web/", waiting until "domcontentloaded"
+
+2026-05-03 10:36:29,448 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:36:29,448 [INFO] motivated_seller: [MN Hennepin] Fetching Star Tribune legal notices
+2026-05-03 10:36:31,169 [INFO] motivated_seller: [MN Hennepin] Notice of Foreclosure: 14 records
+2026-05-03 10:36:33,090 [INFO] motivated_seller: [MN Hennepin] Probate: 12 records
+2026-05-03 10:36:34,771 [INFO] motivated_seller: [MN Hennepin] Judgment: 10 records
+2026-05-03 10:36:47,134 [INFO] motivated_seller: [MN Hennepin] MNPublicNotice: 0 records
+2026-05-03 10:36:47,137 [INFO] motivated_seller:   Requests: 36 records
+2026-05-03 10:36:47,137 [INFO] motivated_seller:   Unique: 13 records for Hennepin MN
+2026-05-03 10:36:47,137 [INFO] motivated_seller: 
+→ Processing: Henry County GA (McDonough/Stockbridge)
+2026-05-03 10:36:47,537 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:36:47,537 [INFO] motivated_seller: [Georgia Henry] Fetching dual source
+2026-05-03 10:36:47,968 [INFO] motivated_seller: [FBL Henry] https://www.foreclosurebidslist.com/foreclosures/ga/henry: 0 so far
+2026-05-03 10:36:49,185 [INFO] motivated_seller: [FBL Henry] https://www.foreclosurebidslist.com/foreclosures/ga/henry/2026/4: 0 so far
+2026-05-03 10:36:50,399 [INFO] motivated_seller: [FBL Henry] https://www.foreclosurebidslist.com/foreclosures/ga/henry/2026/5: 0 so far
+2026-05-03 10:36:51,501 [INFO] motivated_seller: [FBL Henry] https://www.foreclosurebidslist.com/foreclosures/ga/henry/2026/6: 0 so far
+2026-05-03 10:36:52,599 [INFO] motivated_seller: [FBL Henry] https://www.foreclosurebidslist.com/foreclosures/ga/henry/2026/7: 0 so far
+2026-05-03 10:36:53,600 [INFO] motivated_seller: [GA Henry] FBL: 0 records
+2026-05-03 10:36:56,082 [INFO] motivated_seller: [GA Henry] GPN: 0 raw notices
+2026-05-03 10:36:56,082 [INFO] motivated_seller: [GA Henry] Final: 0 (0 GPN-only)
+2026-05-03 10:36:56,082 [INFO] motivated_seller:   Requests: 0 records
+2026-05-03 10:36:56,082 [INFO] motivated_seller:   Unique: 0 records for Henry GA
+2026-05-03 10:36:56,083 [INFO] motivated_seller: 
+→ Processing: Johnson County IN (Greenwood/Franklin)
+2026-05-03 10:37:00,476 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:37:00,476 [INFO] motivated_seller: [Indiana Johnson] Starting fetch, type=html
+2026-05-03 10:37:18,098 [INFO] motivated_seller: [Indiana Johnson] Total: 10
+2026-05-03 10:37:18,099 [INFO] motivated_seller:   Requests: 10 records
+2026-05-03 10:37:18,099 [INFO] motivated_seller:   Unique: 10 records for Johnson IN
+2026-05-03 10:37:18,099 [INFO] motivated_seller: 
+→ Processing: Licking County OH (Newark)
+2026-05-03 10:37:49,486 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:37:49,486 [INFO] motivated_seller: [Ohio Licking] Fetching sheriff sale records
+2026-05-03 10:38:05,101 [INFO] motivated_seller: [Ohio Licking] Sheriff page: 14 records
+2026-05-03 10:38:05,101 [INFO] motivated_seller: [Ohio Licking] Total: 14 records
+2026-05-03 10:38:05,102 [INFO] motivated_seller:   Requests: 14 records
+2026-05-03 10:38:05,102 [INFO] motivated_seller:   Unique: 14 records for Licking OH
+2026-05-03 10:38:05,102 [INFO] motivated_seller: 
+→ Processing: Medina County OH (Medina)
+2026-05-03 10:38:08,143 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:38:08,143 [INFO] motivated_seller: [Ohio Medina] Fetching sheriff sale records
+2026-05-03 10:38:08,143 [INFO] motivated_seller: [Ohio Medina] Sheriff page: 0 records
+2026-05-03 10:38:08,143 [INFO] motivated_seller: [Ohio Medina] Total: 0 records
+2026-05-03 10:38:08,143 [INFO] motivated_seller:   Requests: 0 records
+2026-05-03 10:38:08,143 [INFO] motivated_seller:   Unique: 0 records for Medina OH
+2026-05-03 10:38:08,144 [INFO] motivated_seller: 
+→ Processing: Montgomery County OH (Dayton)
+2026-05-03 10:38:08,548 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:38:08,548 [INFO] motivated_seller: [Montgomery OH] Starting daily scrape
+2026-05-03 10:38:11,744 [WARNING] motivated_seller: [Montgomery PRO CV]: 404 Client Error: Not Found for url: https://pro.mcohio.org/Search.aspx
+2026-05-03 10:38:14,792 [WARNING] motivated_seller: [Montgomery PRO DR]: 404 Client Error: Not Found for url: https://pro.mcohio.org/Search.aspx
+2026-05-03 10:38:15,190 [INFO] motivated_seller: [Montgomery RISS LIS PENDENS]: 0 records
+2026-05-03 10:38:16,713 [INFO] motivated_seller: [Montgomery RISS MECHANIC LIEN]: 0 records
+2026-05-03 10:38:18,236 [INFO] motivated_seller: [Montgomery RISS FEDERAL TAX LIEN]: 0 records
+2026-05-03 10:38:19,759 [INFO] motivated_seller: [Montgomery RISS JUDGMENT LIEN]: 0 records
+2026-05-03 10:38:21,259 [INFO] motivated_seller: [Montgomery OH] Total: 0 records
+2026-05-03 10:38:21,261 [INFO] motivated_seller:   Requests: 0 records
+2026-05-03 10:38:21,261 [INFO] motivated_seller:   Unique: 0 records for Montgomery OH
+2026-05-03 10:38:21,261 [INFO] motivated_seller: 
+→ Processing: Ramsey County MN (St. Paul)
+2026-05-03 10:38:21,766 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:38:21,766 [INFO] motivated_seller: [MN Ramsey] Fetching Star Tribune legal notices
+2026-05-03 10:39:15,708 [INFO] motivated_seller: [MN Ramsey] Notice of Foreclosure: 16 records
+2026-05-03 10:39:17,030 [INFO] motivated_seller: [MN Ramsey] Probate: 0 records
+2026-05-03 10:39:18,550 [INFO] motivated_seller: [MN Ramsey] Judgment: 8 records
+2026-05-03 10:39:30,702 [INFO] motivated_seller: [MN Ramsey] MNPublicNotice: 0 records
+2026-05-03 10:39:30,704 [INFO] motivated_seller:   Requests: 24 records
+2026-05-03 10:39:30,704 [INFO] motivated_seller:   Unique: 8 records for Ramsey MN
+2026-05-03 10:39:30,704 [INFO] motivated_seller: 
+→ Processing: Warren County OH (Mason/Lebanon)
+2026-05-03 10:39:50,764 [INFO] motivated_seller:   Playwright: 0 records
+2026-05-03 10:39:50,764 [INFO] motivated_seller: [Ohio Warren] Fetching sheriff sale records
+2026-05-03 10:42:15,421 [INFO] motivated_seller: [Ohio Warren] Sheriff page: 6 records
+2026-05-03 10:42:15,650 [INFO] motivated_seller: [Ohio Warren] DDN divorce: 0 records
+2026-05-03 10:42:16,785 [INFO] motivated_seller: [Ohio Warren] DDN tax_lien: 0 records
+2026-05-03 10:42:17,973 [INFO] motivated_seller: [Ohio Warren] DDN legal: 0 records
+2026-05-03 10:42:18,973 [INFO] motivated_seller: [Ohio Warren] Total: 6 records
+2026-05-03 10:42:18,974 [INFO] motivated_seller:   Requests: 6 records
+2026-05-03 10:42:18,974 [INFO] motivated_seller:   Unique: 6 records for Warren OH
+2026-05-03 10:42:18,974 [INFO] motivated_seller: 
+============================================================
+2026-05-03 10:42:18,974 [INFO] motivated_seller: Total raw records: 127
+2026-05-03 10:42:18,979 [INFO] motivated_seller: Loaded 1038 existing records from disk
+2026-05-03 10:42:18,981 [INFO] motivated_seller: Merge result → 59 new | 53 updated | 1097 total active (>2026-04-03 cutoff)
+2026-05-03 10:42:19,003 [INFO] motivated_seller: Saved 1097 records → /home/runner/work/MotivatedSeller_Intel/MotivatedSeller_Intel/dashboard/records.json
+2026-05-03 10:42:19,025 [INFO] motivated_seller: Saved 1097 records → /home/runner/work/MotivatedSeller_Intel/MotivatedSeller_Intel/data/records.json
+2026-05-03 10:42:19,035 [INFO] motivated_seller: GHL CSV exported → /home/runner/work/MotivatedSeller_Intel/MotivatedSeller_Intel/data/ghl_export.csv
+2026-05-03 10:42:19,036 [INFO] motivated_seller: GHL CSV exported → /home/runner/work/MotivatedSeller_Intel/MotivatedSeller_Intel/data/ghl_export_mn.csv
+2026-05-03 10:42:19,041 [INFO] motivated_seller: GHL CSV exported → /home/runner/work/MotivatedSeller_Intel/MotivatedSeller_Intel/data/ghl_export_oh.csv
+2026-05-03 10:42:19,046 [INFO] motivated_seller: GHL CSV exported → /home/runner/work/MotivatedSeller_Intel/MotivatedSeller_Intel/data/ghl_export_in.csv
+2026-05-03 10:42:19,046 [INFO] motivated_seller: ============================================================
+2026-05-03 10:42:19,046 [INFO] motivated_seller: PIPELINE SUMMARY
+2026-05-03 10:42:19,046 [INFO] motivated_seller: ============================================================
+2026-05-03 10:42:19,046 [INFO] motivated_seller:   Records pulled:        127
+2026-05-03 10:42:19,046 [INFO] motivated_seller:   Total after dedup:     1097
+2026-05-03 10:42:19,046 [INFO] motivated_seller:   With address:          479
+2026-05-03 10:42:19,046 [INFO] motivated_seller:   Ready for skip trace:  0
+2026-05-03 10:42:19,046 [INFO] motivated_seller:   Verified:              27
+2026-05-03 10:42:19,046 [INFO] motivated_seller:   Needs review:          8
+2026-05-03 10:42:19,046 [INFO] motivated_seller:   No match:              0
+2026-05-03 10:42:19,046 [INFO] motivated_seller:   Errors:                0
+2026-05-03 10:42:19,046 [INFO] motivated_seller: ============================================================
+2026-05-03 10:42:19,046 [INFO] motivated_seller: Done.
