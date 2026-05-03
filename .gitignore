@@ -1,0 +1,20 @@
+# Raw tax roll - too large for git, regenerate from Hennepin Open Data
+data_raw/
+docs/data/County_Parcels.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor
+.vscode/
+.idea/
+.DS_Store
+
+# OS
+Thumbs.db
+
+# Local
+*.log
