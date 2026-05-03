@@ -28,13 +28,44 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Re-score tax roll (if CSV present)
+      - name: Download fresh Hennepin tax roll
+        run: |
+          mkdir -p data_raw
+          echo "Downloading Hennepin County parcels CSV from ArcGIS Hub..."
+          # Hennepin County Parcels — official open data CSV
+          # Dataset: 7975aabf6e1e42998a40a4b085ffefdf_1 (County Parcels)
+          DATASET_ID="7975aabf6e1e42998a40a4b085ffefdf_1"
+          DOWNLOAD_URL="https://opendata.arcgis.com/api/v3/datasets/${DATASET_ID}/downloads/data?format=csv&spatialRefId=4326&where=1%3D1"
+          curl -L --max-time 600 \
+            -H "User-Agent: Mozilla/5.0 (MotivatedSeller-Intel-Bot)" \
+            -o data_raw/County_Parcels.csv \
+            "$DOWNLOAD_URL"
+          if [ -f data_raw/County_Parcels.csv ]; then
+            SIZE=$(stat -c %s data_raw/County_Parcels.csv 2>/dev/null || stat -f %z data_raw/County_Parcels.csv)
+            SIZE_MB=$((SIZE / 1024 / 1024))
+            echo "Downloaded ${SIZE_MB} MB"
+            if [ "$SIZE_MB" -lt 50 ]; then
+              echo "WARNING: File suspiciously small (${SIZE_MB} MB) — may be an error response"
+              head -c 500 data_raw/County_Parcels.csv
+              echo ""
+            fi
+          else
+            echo "Download failed"
+          fi
+        continue-on-error: true
+
+      - name: Re-score tax roll
         run: |
           if [ -f data_raw/County_Parcels.csv ]; then
-            echo "Tax roll found — re-scoring all parcels..."
-            python scripts/process_parcels.py
+            SIZE=$(stat -c %s data_raw/County_Parcels.csv 2>/dev/null || stat -f %z data_raw/County_Parcels.csv)
+            if [ "$SIZE" -gt 50000000 ]; then
+              echo "Re-scoring all parcels (CSV is ${SIZE} bytes)..."
+              python scripts/process_parcels.py
+            else
+              echo "CSV too small to be valid — skipping re-score, using existing leads.json"
+            fi
           else
-            echo "No tax roll CSV in Actions runner — using existing leads.json"
+            echo "No tax roll CSV — using existing leads.json"
           fi
         continue-on-error: true
 
