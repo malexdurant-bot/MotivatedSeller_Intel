@@ -170,39 +170,65 @@ def cross_reference_leads(tax_roll_index: dict):
     # Build PID set from the 15K for fast lookup
     scored_pids = {L.get('pid', '') for L in leads}
 
-    # Load YELLOW tier signal data
+    # Load YELLOW tier signal data — index by both PID and address.
+    # PID match is exact and preferred. Address match is fallback.
     violations_by_addr = {}
+    violations_by_pid = {}
     foreclosure_addrs = set()
+    foreclosure_pids = set()
+    foreclosure_by_pid = {}
     forfeiture_addrs = set()
+    forfeiture_pids = set()
     forfeiture_by_addr = {}
+    forfeiture_by_pid = {}
+
+    def normalize_pid(p):
+        """Strip non-digits — Hennepin PIDs are pure numeric."""
+        if not p:
+            return ''
+        return ''.join(ch for ch in str(p) if ch.isdigit())
 
     if VIOLATIONS_JSON.exists():
         with open(VIOLATIONS_JSON) as f:
             v = json.load(f)
         for item in v.get('violations', []):
             norm = normalize_address(item.get('address', ''))
+            pid = normalize_pid(item.get('pid', ''))
             if norm:
                 violations_by_addr.setdefault(norm, []).append(item)
-        print(f"  Violations index: {len(violations_by_addr):,} addresses", flush=True)
+            if pid:
+                violations_by_pid.setdefault(pid, []).append(item)
+        print(f"  Violations index: {len(violations_by_addr):,} addresses, {len(violations_by_pid):,} PIDs", flush=True)
 
     if FORECLOSURES_JSON.exists():
         with open(FORECLOSURES_JSON) as f:
             fc = json.load(f)
         for notice in fc.get('notices', []):
+            # Skip non-Hennepin notices that snuck through search
+            if notice.get('county', '').upper() != 'HENNEPIN':
+                continue
             norm = normalize_address(notice.get('address', ''))
+            pid = normalize_pid(notice.get('pid', ''))
             if norm:
                 foreclosure_addrs.add(norm)
-        print(f"  Foreclosure notices: {len(foreclosure_addrs):,} addresses", flush=True)
+            if pid:
+                foreclosure_pids.add(pid)
+                foreclosure_by_pid[pid] = notice
+        print(f"  Foreclosure notices: {len(foreclosure_addrs):,} addresses, {len(foreclosure_pids):,} PIDs", flush=True)
 
     if FORFEITURE_JSON.exists():
         with open(FORFEITURE_JSON) as f:
             tf = json.load(f)
         for prop in tf.get('properties', []):
             norm = normalize_address(prop.get('address', ''))
+            pid = normalize_pid(prop.get('pid', ''))
             if norm:
                 forfeiture_addrs.add(norm)
                 forfeiture_by_addr[norm] = prop
-        print(f"  Forfeiture list: {len(forfeiture_addrs):,} addresses", flush=True)
+            if pid:
+                forfeiture_pids.add(pid)
+                forfeiture_by_pid[pid] = prop
+        print(f"  Forfeiture list: {len(forfeiture_addrs):,} addresses, {len(forfeiture_pids):,} PIDs", flush=True)
 
     # -------------------------------------------------------
     # FULL TAX ROLL LOOKUP
@@ -259,10 +285,15 @@ def cross_reference_leads(tax_roll_index: dict):
     # BOOST SCORES for leads already in the 15K
     # -------------------------------------------------------
     enhanced_count = 0
+    pid_match_count = 0
+    addr_match_count = 0
+
     for lead in leads:
         lead_addr = normalize_address(lead.get('address', ''))
+        lead_pid = normalize_pid(lead.get('pid', ''))
         new_signals = list(lead.get('signals', []))
         bonus = 0
+        matched_by = []
 
         # Enrich mailing data from full roll if available
         if pid_idx:
@@ -271,9 +302,16 @@ def cross_reference_leads(tax_roll_index: dict):
                 lead['mail_address'] = parcel.get('mail_address', '')
                 lead['mail_city']    = parcel.get('mail_city', '')
 
-        # Code violations signal
-        if lead_addr in violations_by_addr:
-            count = len(violations_by_addr[lead_addr])
+        # --- Code violations: PID match first, then address ---
+        v_match = None
+        if lead_pid and lead_pid in violations_by_pid:
+            v_match = violations_by_pid[lead_pid]
+            matched_by.append('PID')
+        elif lead_addr in violations_by_addr:
+            v_match = violations_by_addr[lead_addr]
+            matched_by.append('addr')
+        if v_match:
+            count = len(v_match)
             if count >= 3:
                 bonus += 25
                 new_signals.append(f"🔴 {count} open code violations")
@@ -281,17 +319,36 @@ def cross_reference_leads(tax_roll_index: dict):
                 bonus += 15
                 new_signals.append(f"🟡 {count} code violation(s)")
 
-        # Foreclosure notice signal
-        if lead_addr in foreclosure_addrs:
+        # --- Foreclosure: PID match first, then address ---
+        fc_matched = False
+        if lead_pid and lead_pid in foreclosure_pids:
+            fc_matched = True
+            pid_match_count += 1
+        elif lead_addr in foreclosure_addrs:
+            fc_matched = True
+            addr_match_count += 1
+        if fc_matched:
             bonus += 30
             new_signals.append("⚡ FORECLOSURE NOTICE FILED")
+            # Pull notice details
+            fc_rec = foreclosure_by_pid.get(lead_pid, {})
+            if fc_rec.get('sale_date'):
+                lead['foreclosure_sale_date'] = fc_rec['sale_date']
+            if fc_rec.get('amount_due'):
+                lead['foreclosure_amount'] = fc_rec['amount_due']
 
-        # Tax forfeiture signal
-        if lead_addr in forfeiture_addrs:
+        # --- Tax forfeiture: PID match first, then address ---
+        tf_matched = False
+        tf_rec = {}
+        if lead_pid and lead_pid in forfeiture_pids:
+            tf_matched = True
+            tf_rec = forfeiture_by_pid.get(lead_pid, {})
+        elif lead_addr in forfeiture_addrs:
+            tf_matched = True
+            tf_rec = forfeiture_by_addr.get(lead_addr, {})
+        if tf_matched:
             bonus += 35
             new_signals.append("🔥 ON TAX FORFEITURE LIST")
-            # Pull appraised value from forfeiture record if available
-            tf_rec = forfeiture_by_addr.get(lead_addr, {})
             if tf_rec.get('appraised_value'):
                 lead['forfeiture_appraised'] = tf_rec['appraised_value']
 
@@ -308,6 +365,8 @@ def cross_reference_leads(tax_roll_index: dict):
     watch = sum(1 for L in leads if L['score'] < 60)
 
     print(f"\n  Leads boosted by YELLOW signals: {enhanced_count:,}", flush=True)
+    print(f"    PID matches:     {pid_match_count:,}  (exact)", flush=True)
+    print(f"    Address matches: {addr_match_count:,}  (fuzzy)", flush=True)
     print(f"  HOT: {hot:,} | WARM: {warm:,} | WATCH: {watch:,}", flush=True)
 
     enhanced_data = {
