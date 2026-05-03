@@ -220,41 +220,58 @@ def scrape_star_tribune_classifieds():
         'https://classifieds.startribune.com/mn/public-notices/notice-of-mortgage-foreclosure-sale/',
     ]
 
-    for url in search_urls:
-        r = fetch(url)
-        if not r:
-            continue
+    for base_url in search_urls:
+        # Paginate through up to 10 pages
+        for page in range(1, 11):
+            if page == 1:
+                url = base_url
+            else:
+                sep = '&' if '?' in base_url else '?'
+                url = f'{base_url}{sep}page={page}'
 
-        soup = BeautifulSoup(r.text, 'html.parser')
-        page_text = soup.get_text(' ', strip=True)
+            r = fetch(url)
+            if not r:
+                break
 
-        # Split on notice boundaries
-        splits = re.split(r'NOTICE OF MORTGAGE FORECLOSURE SALE', page_text, flags=re.I)
-        for chunk in splits[1:]:
-            record = parse_notice_text('NOTICE OF MORTGAGE FORECLOSURE SALE ' + chunk[:4000])
-            if record:
-                record['source'] = url
-                records.append(record)
+            soup = BeautifulSoup(r.text, 'html.parser')
+            page_text = soup.get_text(' ', strip=True)
 
-        # Also find links to individual notices
-        notice_links = []
-        for a in soup.find_all('a', href=True):
-            href = a['href']
-            if 'foreclosure' in href.lower() or 'mortgage' in href.lower():
-                if not href.startswith('http'):
-                    href = 'https://classifieds.startribune.com' + href
-                if href not in notice_links:
-                    notice_links.append(href)
-
-        for link in notice_links[:15]:
-            time.sleep(0.5)
-            nr = fetch(link)
-            if nr:
-                notice_soup = BeautifulSoup(nr.text, 'html.parser')
-                notice_text = notice_soup.get_text(' ', strip=True)
-                record = parse_notice_text(notice_text, source_url=link)
+            # Split on notice boundaries
+            splits = re.split(r'NOTICE OF MORTGAGE FORECLOSURE SALE', page_text, flags=re.I)
+            page_records = 0
+            for chunk in splits[1:]:
+                record = parse_notice_text('NOTICE OF MORTGAGE FORECLOSURE SALE ' + chunk[:4000])
                 if record:
+                    record['source'] = url
                     records.append(record)
+                    page_records += 1
+
+            print(f"  Page {page}: {page_records} notices", flush=True)
+
+            # Also find links to individual notices on this page
+            notice_links = []
+            for a in soup.find_all('a', href=True):
+                href = a['href']
+                if 'foreclosure' in href.lower() or 'mortgage' in href.lower():
+                    if not href.startswith('http'):
+                        href = 'https://classifieds.startribune.com' + href
+                    if href not in notice_links:
+                        notice_links.append(href)
+
+            for link in notice_links[:10]:
+                time.sleep(0.3)
+                nr = fetch(link)
+                if nr:
+                    notice_soup = BeautifulSoup(nr.text, 'html.parser')
+                    notice_text = notice_soup.get_text(' ', strip=True)
+                    record = parse_notice_text(notice_text, source_url=link)
+                    if record:
+                        records.append(record)
+
+            # Stop paginating if this page had no results
+            if page_records == 0 and not notice_links:
+                break
+            time.sleep(1)
 
         if records:
             break
