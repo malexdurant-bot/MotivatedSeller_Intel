@@ -161,8 +161,9 @@ def build_contact(lead: dict) -> dict:
             {'key': 'ms_intel_signals',      'field_value': ' | '.join(signals)},
             {'key': 'ms_intel_lead_type',    'field_value': lead_type},
         ],
-        'notes': '\n'.join(notes_lines),
     }
+    # Notes are added via a separate API call after contact creation
+    # (GHL v2 contacts endpoint does not accept 'notes' in the payload)
 
 
 def contact_exists(address: str, owner: str) -> str | None:
