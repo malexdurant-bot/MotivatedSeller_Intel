@@ -32,25 +32,33 @@ jobs:
         run: |
           mkdir -p data_raw
           echo "Downloading Hennepin County parcels CSV from ArcGIS Hub..."
-          # Hennepin County Parcels — official open data CSV
-          # Dataset: 7975aabf6e1e42998a40a4b085ffefdf_1 (County Parcels)
+          
+          # Primary URL — ArcGIS Hub API v3
           DATASET_ID="7975aabf6e1e42998a40a4b085ffefdf_1"
-          DOWNLOAD_URL="https://opendata.arcgis.com/api/v3/datasets/${DATASET_ID}/downloads/data?format=csv&spatialRefId=4326&where=1%3D1"
-          curl -L --max-time 600 \
-            -H "User-Agent: Mozilla/5.0 (MotivatedSeller-Intel-Bot)" \
-            -o data_raw/County_Parcels.csv \
-            "$DOWNLOAD_URL"
-          if [ -f data_raw/County_Parcels.csv ]; then
-            SIZE=$(stat -c %s data_raw/County_Parcels.csv 2>/dev/null || stat -f %z data_raw/County_Parcels.csv)
-            SIZE_MB=$((SIZE / 1024 / 1024))
-            echo "Downloaded ${SIZE_MB} MB"
-            if [ "$SIZE_MB" -lt 50 ]; then
-              echo "WARNING: File suspiciously small (${SIZE_MB} MB) — may be an error response"
-              head -c 500 data_raw/County_Parcels.csv
-              echo ""
-            fi
+          URL1="https://opendata.arcgis.com/api/v3/datasets/${DATASET_ID}/downloads/data?format=csv&spatialRefId=4326&where=1%3D1"
+          
+          # Fallback URL — ArcGIS feature service direct export
+          URL2="https://services.arcgis.com/afSMGVsC7QlRK1kZ/arcgis/rest/services/County_Parcels/FeatureServer/1/query?where=1%3D1&outFields=*&f=geojson"
+          
+          # Try primary URL
+          echo "Trying primary URL..."
+          curl -L --max-time 900 --retry 2             -H "User-Agent: Mozilla/5.0 (compatible; research-bot/1.0)"             -H "Accept: text/csv,application/csv,*/*"             -o data_raw/County_Parcels.csv             "$URL1"
+          
+          SIZE=$(stat -c %s data_raw/County_Parcels.csv 2>/dev/null || echo "0")
+          SIZE_MB=$((SIZE / 1024 / 1024))
+          echo "Primary download: ${SIZE_MB} MB (${SIZE} bytes)"
+          
+          # Validate — a real 448K parcel CSV should be >100MB
+          if [ "$SIZE" -lt 100000000 ]; then
+            echo "Primary download too small or failed. First 300 bytes:"
+            head -c 300 data_raw/County_Parcels.csv || true
+            echo ""
+            echo "File may be an error response or rate-limited. Keeping whatever downloaded."
+            echo "The re-score step will validate before proceeding."
           else
-            echo "Download failed"
+            echo "✅ Download successful: ${SIZE_MB} MB"
+            echo "First line (headers):"
+            head -1 data_raw/County_Parcels.csv
           fi
         continue-on-error: true
 
@@ -79,6 +87,13 @@ jobs:
           echo "Files in docs/data/:"
           ls -lh docs/data/
 
+      - name: Push leads to GoHighLevel (Jarvis)
+        env:
+          GHL_API_KEY: ${{ secrets.GHL_API_KEY }}
+          GHL_LOCATION_ID: ${{ secrets.GHL_LOCATION_ID }}
+        run: python scripts/push_to_ghl.py
+        continue-on-error: true
+
       - name: Commit and push updated data
         run: |
           git config --local user.email "action@github.com"
@@ -89,6 +104,8 @@ jobs:
           git add docs/data/foreclosures.json || true
           git add docs/data/tax_forfeiture.json || true
           git add docs/data/new_signal_candidates.json || true
+          git add docs/data/ghl_push_log.json || true
+          git add docs/data/ghl_pushed_pids.json || true
           # Only commit if something actually changed
           git diff --staged --quiet || git commit -m "Daily scraper run $(date -u '+%Y-%m-%d %H:%M UTC')"
           git push || true
